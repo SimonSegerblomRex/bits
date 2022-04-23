@@ -14,8 +14,10 @@ def pack(x, count):
 def unpack(buf, count):
     bits = np.unpackbits(buf, bitorder="little")
     bits = bits.reshape((-1, count))
-    bits = np.pad(bits, ((0, 0), (0, 16 - count)))
-    return np.packbits(bits, bitorder="little").view("<u2")
+    bytes_ = np.packbits(bits, axis=1, bitorder="little").reshape(-1)
+    if count > 8:
+        return bytes_.view("<u2")
+    return bytes_.astype(np.uint16)
 
 
 for bitdepth in range(1, 17):
