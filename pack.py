@@ -1,6 +1,4 @@
-import bitarray
 import numpy as np
-from bitarray.util import int2ba
 
 
 def pack(array, bitdepth, bitorder="little"):
@@ -34,21 +32,14 @@ def unpack(buf, bitdepth, bitorder="little"):
 for bitorder in ["little", "big"]:
     print(f"Bitorder: {bitorder}")
     for bitdepth in range(1, 65):
+        # Generate input
         width, height = 1920, 1088
         rng = np.random.default_rng()
         itemsize = np.min_scalar_type((1 << bitdepth) - 1).itemsize
         image = rng.integers(1 << bitdepth, size=(height, width), dtype=f"u{itemsize}")
-
+        # Pack bits
         encoded = pack(image, bitdepth=bitdepth, bitorder=bitorder)
         print(f"Compression ratio: {image.nbytes / encoded.nbytes:5.2f} (bitdepth: {bitdepth:2})")
-
-        if 0:
-            # bitarray module
-            ba = bitarray.bitarray(endian=bitorder)
-            code = {i: int2ba(i, length=bitdepth, endian=bitorder) for i in range(1 << bitdepth)}
-            ba.encode(code, image.ravel())
-            baout = ba.tobytes()
-            assert baout == encoded.tobytes()
-
+        # Unpack bits
         decoded = unpack(encoded, bitdepth=bitdepth, bitorder=bitorder).reshape((height, width))
         np.testing.assert_array_equal(image, decoded)
